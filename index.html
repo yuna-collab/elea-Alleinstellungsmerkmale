@@ -585,6 +585,12 @@ button{font:inherit;color:inherit}
   .js .reveal{opacity:1;transform:none}
 }
 </style>
+<style>
+/* Im Webflow-iframe: weniger Abstand oben und unten */
+html.in-iframe,html.in-iframe body{height:auto;min-height:0}
+html.in-iframe main>.section:first-child{padding-top:clamp(16px,3vw,40px)}
+html.in-iframe main>.section:last-child{padding-bottom:clamp(16px,3vw,40px)}
+</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -880,12 +886,19 @@ tnm: pT3 N0 (0/29) Mx L0 V0 R0</span><span class="line-tag"><svg aria-hidden="tr
     if(reduced){v.removeAttribute("autoplay");v.addEventListener("loadedmetadata",function(){v.currentTime=Math.max(0,v.duration-.05);});}
   })();
 
-  /* Höhe an die einbettende Seite melden (Webflow-iframe) */
+  /* Höhe an die einbettende Seite melden (Webflow-iframe).
+     Gemessen wird das Ende von <main>, nicht die Fensterhöhe,
+     damit der iframe auch schrumpfen kann. */
   (function(){
     if(window.parent===window){return;}
+    document.documentElement.classList.add("in-iframe");
+    var main=document.querySelector("main")||document.body;
     var last=0;
-    function post(){var h=Math.ceil(document.documentElement.scrollHeight);if(h!==last){last=h;window.parent.postMessage({type:"elea-usp-height",height:h},"*");}}
-    if("ResizeObserver" in window){new ResizeObserver(post).observe(document.body);}
+    function post(){
+      var h=Math.ceil(main.getBoundingClientRect().bottom+window.scrollY);
+      if(h>0&&h!==last){last=h;window.parent.postMessage({type:"elea-usp-height",height:h},"*");}
+    }
+    if("ResizeObserver" in window){new ResizeObserver(post).observe(main);}
     window.addEventListener("load",post);setInterval(post,1000);post();
   })();
 
