@@ -1173,7 +1173,10 @@ tnm: pT3 N0 (0/29) Mx L0 V0 R0</span><span class="line-tag"><svg aria-hidden="tr
     function go(n){
       show((n+P.length)%P.length);
       var top=box.getBoundingClientRect().top;
-      if(top<0){window.scrollBy({top:top-16,behavior:reduced?"auto":"smooth"});}
+      if(window.parent!==window){
+        /* Im Webflow-iframe: die einbettende Seite zum Folienanfang scrollen lassen */
+        window.parent.postMessage({type:"elea-usp-scroll",top:Math.round(top+window.scrollY)},"*");
+      }else if(top<0){window.scrollBy({top:top-16,behavior:reduced?"auto":"smooth"});}
     }
     prev.addEventListener("click",function(){go(cur-1);});
     next.addEventListener("click",function(){go(cur+1);});
