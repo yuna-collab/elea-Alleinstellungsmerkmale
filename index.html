@@ -509,6 +509,15 @@ button{font:inherit;color:inherit}
 .pz.is-manual .pz-tabs button[aria-selected="true"] i{animation:none;width:100%}
 .pz{display:grid}
 .pz-tabs{grid-row:1}
+.pz-nav{display:none;grid-row:3;align-items:center;justify-content:space-between;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+.pz-nav .btn{min-height:46px;padding:0 18px;font-size:15px}
+.pz-nav .btn[disabled]{opacity:.35;cursor:default}
+.pz-prev svg{transform:rotate(180deg)}
+.pz-count{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pz-count b{color:var(--deep);font-weight:700}
+.pz-dots{display:flex;gap:6px}
+.pz-dots i{width:7px;height:7px;border-radius:50%;background:var(--deep-12);transition:background-color .3s,width .3s}
+.pz-dots i.on{width:18px;border-radius:4px;background:var(--teal)}
 .pz-pane,.pz-pane.e-row{display:block;grid-row:2;grid-column:1;transition:opacity .45s var(--ease)}
 .pz-pane.is-off{opacity:0;visibility:hidden}
 .pz-top{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,64px);align-items:center}
@@ -649,10 +658,8 @@ html.in-iframe #opener{min-height:0}
   .g-foot{padding:.9rem 1.15rem}
   .g-actions{margin-left:0;width:100%;justify-content:space-between}
   /* Merkmale untereinander statt Tabs */
-  .pz{display:block}
   .pz-tabs{display:none}
-  .pz-pane.is-off{opacity:1;visibility:visible}
-  .pz-pane+.pz-pane{margin-top:48px;padding-top:40px;border-top:1px solid var(--line)}
+  .pz-nav{display:flex}
   .pz-vis{min-height:0;padding:28px 16px}
   .pz-vis .ill{gap:10px}
   .pz-txt h3{font-size:1.45rem}
@@ -840,6 +847,11 @@ tnm: pT3 N0 (0/29) Mx L0 V0 R0</div></div><div class="g-f"><span>Abrechnungsziff
             </div>
           </div>
         </div>
+      <div class="pz-nav">
+        <button type="button" class="btn btn-ghost pz-prev" aria-label="Vorheriges Merkmal"><svg aria-hidden="true"><use href="#i-arrow"/></svg>Zurück</button>
+        <span class="pz-count" aria-live="polite"><span><b>01</b> / 04</span><span class="pz-dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span></span>
+        <button type="button" class="btn btn-deep pz-next"><span>Weiter</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+      </div>
     </div>
   </div>
 </section>
@@ -1146,12 +1158,32 @@ tnm: pT3 N0 (0/29) Mx L0 V0 R0</span><span class="line-tag"><svg aria-hidden="tr
       cur=n;
       T.forEach(function(t,k){t.setAttribute("aria-selected",k===n);t.tabIndex=k===n?0:-1;});
       P.forEach(function(p,k){
-        var off=!phone.matches&&k!==n;
+        var off=k!==n;
         p.hidden=false;p.classList.toggle("is-off",off);p.inert=off;
         if(off){p.setAttribute("aria-hidden","true");}else{p.removeAttribute("aria-hidden");}
-        p.classList.toggle("is-in",(phone.matches||k===n)&&vis);
+        p.classList.toggle("is-in",k===n&&vis);
       });
+      cntB.textContent="0"+(n+1);
+      dots.forEach(function(d,k){d.classList.toggle("on",k===n);});
+      prev.disabled=n===0;
+      nextT.textContent=n===P.length-1?"Von vorn":"Weiter";
     }
+    var prev=box.querySelector(".pz-prev"),next=box.querySelector(".pz-next"),nextT=next.querySelector("span");
+    var cntB=box.querySelector(".pz-count b"),dots=[].slice.call(box.querySelectorAll(".pz-dots i"));
+    function go(n){
+      show((n+P.length)%P.length);
+      var top=box.getBoundingClientRect().top;
+      if(top<0){window.scrollBy({top:top-16,behavior:reduced?"auto":"smooth"});}
+    }
+    prev.addEventListener("click",function(){go(cur-1);});
+    next.addEventListener("click",function(){go(cur+1);});
+    var sx=null,sy=0;
+    box.addEventListener("touchstart",function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+    box.addEventListener("touchend",function(e){
+      if(sx===null||!phone.matches){return;}
+      var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;sx=null;
+      if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){if(dx<0&&cur<P.length-1){go(cur+1);}else if(dx>0&&cur>0){go(cur-1);}}
+    },{passive:true});
     if(phone.addEventListener){phone.addEventListener("change",function(){show(cur);});}
     show(0);
     T.forEach(function(t,k){
