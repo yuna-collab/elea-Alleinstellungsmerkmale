@@ -1272,6 +1272,19 @@ tnm: pT3 N0 (0/29) Mx L0 V0 R0</span><span class="line-tag"><svg aria-hidden="tr
     Object.keys(mods).forEach(function(k){mods[k].classList.remove("is-filled","is-receiving");});
   }
   function inView(r){return r.bottom>0&&r.top<window.innerHeight&&r.width>0;}
+  /* Handy: beim Abspielen zur Diktatzeile und zum Ziel-Modul führen */
+  var phoneQ=window.matchMedia("(max-width:720px)");
+  function guide(node,tok){
+    if(!phoneQ.matches){return Promise.resolve();}
+    var r=node.getBoundingClientRect();
+    if(window.parent!==window){
+      window.parent.postMessage({type:"elea-usp-goto",top:Math.round(r.top+window.scrollY),height:Math.round(r.height)},"*");
+    }else{
+      if(r.top>=60&&r.bottom<=window.innerHeight-60){return Promise.resolve();}
+      window.scrollTo({top:Math.max(0,r.top+window.scrollY-(window.innerHeight-r.height)/2),behavior:reduced?"auto":"smooth"});
+    }
+    return wait(reduced?0:750,tok);
+  }
   function fly(line,mod){
     if(reduced||!line.animate){return Promise.resolve();}
     var a=line.querySelector(".line-t").getBoundingClientRect(),target=mod.querySelector("p").getBoundingClientRect();
@@ -1307,16 +1320,16 @@ tnm: pT3 N0 (0/29) Mx L0 V0 R0</span><span class="line-tag"><svg aria-hidden="tr
         var ch=text.charAt(n-1),d=reduced?0:(ch===" "?55:(/[,:.]/.test(ch)?140:22+Math.random()*26));
         return wait(d,tok).then(typeChar);
       }
-      return typeChar().then(function(){
+      return guide(l,tok).then(typeChar).then(function(){
         caret.remove();rest.remove();setSpeaking(false);l.classList.remove("is-typing");
         return wait(reduced?0:220,tok);
       }).then(function(){
         var m=mods[l.dataset.mod];
         m.classList.add("is-receiving");
-        return fly(l,m).then(function(){
+        return guide(m,tok).then(function(){return fly(l,m);}).then(function(){
           if(tok!==S.token){throw "x";}
           l.classList.add("is-routed");m.classList.add("is-filled");
-          return wait(reduced?0:420,tok);
+          return wait(reduced?0:(phoneQ.matches?1200:420),tok);
         }).then(function(){m.classList.remove("is-receiving");});
       }).then(function(){i++;return wait(reduced?0:260,tok).then(nextLine);});
     }
