@@ -1171,13 +1171,16 @@ tnm: pT3 N0 (0/29) Mx L0 V0 R0</span><span class="line-tag"><svg aria-hidden="tr
     }
     var prev=box.querySelector(".pz-prev"),next=box.querySelector(".pz-next"),nextT=next.querySelector("span");
     var cntB=box.querySelector(".pz-count b"),dots=[].slice.call(box.querySelectorAll(".pz-dots i"));
+    var nav=box.querySelector(".pz-nav");
     function go(n){
+      /* Die Buttons bleiben beim Blättern an derselben Stelle auf dem Bildschirm */
+      var before=nav.getBoundingClientRect().top;
       show((n+P.length)%P.length);
-      var top=box.getBoundingClientRect().top;
+      var shift=Math.round(nav.getBoundingClientRect().top-before);
+      if(!shift){return;}
       if(window.parent!==window){
-        /* Im Webflow-iframe: die einbettende Seite zum Folienanfang scrollen lassen */
-        window.parent.postMessage({type:"elea-usp-scroll",top:Math.round(top+window.scrollY)},"*");
-      }else if(top<0){window.scrollBy({top:top-16,behavior:reduced?"auto":"smooth"});}
+        window.parent.postMessage({type:"elea-usp-shift",dy:shift},"*");
+      }else{window.scrollBy(0,shift);}
     }
     prev.addEventListener("click",function(){go(cur-1);});
     next.addEventListener("click",function(){go(cur+1);});
@@ -1274,8 +1277,14 @@ tnm: pT3 N0 (0/29) Mx L0 V0 R0</span><span class="line-tag"><svg aria-hidden="tr
   function inView(r){return r.bottom>0&&r.top<window.innerHeight&&r.width>0;}
   /* Handy: beim Abspielen zur Diktatzeile und zum Ziel-Modul führen */
   var phoneQ=window.matchMedia("(max-width:720px)");
+  /* Wer selbst scrollt, wird nicht mehr mitgeführt */
+  var userMoved=false;
+  function moved(){if(S.running){userMoved=true;}}
+  window.addEventListener("touchmove",moved,{passive:true});
+  window.addEventListener("wheel",moved,{passive:true});
+  window.addEventListener("keydown",function(e){if(/^(ArrowUp|ArrowDown|PageUp|PageDown|Home|End| )$/.test(e.key)){moved();}});
   function guide(node,tok){
-    if(!phoneQ.matches){return Promise.resolve();}
+    if(!phoneQ.matches||userMoved){return Promise.resolve();}
     var r=node.getBoundingClientRect();
     if(window.parent!==window){
       window.parent.postMessage({type:"elea-usp-goto",top:Math.round(r.top+window.scrollY),height:Math.round(r.height)},"*");
@@ -1304,7 +1313,7 @@ tnm: pT3 N0 (0/29) Mx L0 V0 R0</span><span class="line-tag"><svg aria-hidden="tr
   }
   function run(){
     var tok=++S.token;
-    S.running=true;S.paused=false;S.done=false;
+    S.running=true;S.paused=false;S.done=false;userMoved=false;
     resetUI();setPlayUI();setState("live","Hört zu");
     var i=0;
     function nextLine(){
