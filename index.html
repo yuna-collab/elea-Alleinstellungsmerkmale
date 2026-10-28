@@ -539,7 +539,8 @@ button{font:inherit;color:inherit}
 .pz-fxl .lg{width:clamp(44px,4.4vw,56px)}
 .pz-c ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .pz-c li{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px;font-weight:500;color:var(--deep);padding-top:8px;border-top:1px solid var(--line)}
-.pz-fx li{justify-content:flex-end}
+.pz-fx li{justify-content:flex-start}
+@media (min-width:901px){.pz-fx li{flex-direction:column;align-items:flex-start;gap:6px}.pz-fx li::before{content:"\00a0"}}
 .pz-c li b{display:inline-flex;align-items:center;gap:6px;font-weight:500;color:var(--deep-80)}
 .pz-c li b svg{width:18px;height:18px;padding:3px;border-radius:50%;background:var(--grey);color:var(--deep-80)}
 .pz-nx ul{grid-template-columns:repeat(3,1fr);gap:12px}
@@ -555,7 +556,7 @@ button{font:inherit;color:inherit}
   .pz-c{min-height:0}
 }
 @keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
-@media (max-width:520px){.pz-nx ul{grid-template-columns:1fr}.pz-nx li{flex-direction:row;align-items:center}}
+@media (max-width:520px){.pz-nx ul{grid-template-columns:1fr}.pz-nx li{flex-direction:row;align-items:center}.pz-fx li{justify-content:flex-end}}
 
 
 /* ---------- Claim-System (Kampagne 2026) ---------- */
